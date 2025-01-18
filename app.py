@@ -1,5 +1,5 @@
 import random
-from openai import ChatCompletion
+import openai
 import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
@@ -7,6 +7,7 @@ import os
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = api_key
 
 def validate_playlist_rules(data, num_playlists, tracks_per_playlist):
     """Validate if the playlists can be created based on the rules."""
@@ -49,14 +50,14 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
 
 def suggest_playlist_names(num_playlists):
     """Use OpenAI API to suggest playlist names."""
-    completion = ChatCompletion.create(
+    response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=[
             {"role": "system", "content": "Suggest creative playlist names based on themes of love and music."},
             {"role": "user", "content": f"Generate {num_playlists} playlist names that are fun and unique."}
         ]
     )
-    return [choice['message']['content'] for choice in completion['choices']]
+    return [choice['message']['content'] for choice in response['choices']]
 
 def process_playlists(file, num_playlists, tracks_per_playlist):
     """Main function to process playlists and return results."""
