@@ -16,7 +16,7 @@ def validate_playlist_rules(data, num_playlists, tracks_per_playlist):
 
     max_tracks_by_artist = 3 * unique_artists * num_playlists
     if total_tracks < tracks_per_playlist * num_playlists:
-        return False, "Insufficient tracks for the requested playlists."
+        return False, "Error: Archivo con data menor a tus solicitud. Ajusta la cantidad de playlists y tracks e intentalo de nuevo."
     if max_tracks_by_artist < tracks_per_playlist * num_playlists:
         return False, "Too many restrictions for the available tracks."
     return True, "Valid playlist configuration."
@@ -96,9 +96,15 @@ def process_playlists(file, num_playlists, tracks_per_playlist):
     results = []
     for i, playlist in enumerate(playlists):
         playlist['Playlist Name'] = playlist_names[i]
-        results.append(playlist[['Playlist Name', 'artist', 'title']])
+        results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc']])
 
     return "Playlists generated successfully!", results
+
+def save_to_excel(playlists, output_filename):
+    """Save playlists to an Excel file with each playlist as a separate sheet."""
+    with pd.ExcelWriter(output_filename) as writer:
+        for i, playlist in enumerate(playlists):
+            playlist.to_excel(writer, sheet_name=f"Playlist {i + 1}", index=False)
 
 # Streamlit Interface
 st.title("Playlist Generator")
@@ -108,13 +114,27 @@ uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 num_playlists = st.number_input("Number of Playlists", min_value=1, value=3, step=1)
 tracks_per_playlist = st.number_input("Tracks per Playlist", min_value=1, value=20, step=1)
 
-if uploaded_file is not None:
-    with st.spinner("Processing playlists..."):
-        message, playlists = process_playlists(uploaded_file, num_playlists, tracks_per_playlist)
+if st.button("Create Playlists"):
+    if uploaded_file is not None:
+        with st.spinner("Processing playlists..."):
+            message, playlists = process_playlists(uploaded_file, num_playlists, tracks_per_playlist)
 
-    st.write(message)
+        st.write(message)
 
-    if playlists:
-        for i, playlist in enumerate(playlists):
-            st.subheader(f"Playlist {i + 1}")
-            st.write(playlist.to_html(index=False, escape=False), unsafe_allow_html=True)
+        if playlists:
+            for i, playlist in enumerate(playlists):
+                st.subheader(f"Playlist {i + 1}")
+                st.write(playlist.to_html(index=False, escape=False), unsafe_allow_html=True)
+
+            # Add a download button for the Excel file
+            output_filename = "playlists.xlsx"
+            save_to_excel(playlists, output_filename)
+            with open(output_filename, "rb") as file:
+                st.download_button(
+                    label="Download Playlists as Excel",
+                    data=file,
+                    file_name=output_filename,
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+        else:
+            st.error("Error: Archivo con data menor a tus solicitud. Ajusta la cantidad de playlists y tracks e intentalo de nuevo.")
