@@ -136,15 +136,16 @@ st.title("Playlist Generator")
 st.write("Upload an Excel file to generate playlists with specific rules.")
 
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
+use_openai = st.checkbox("Use OpenAI for Playlist Names")
+if use_openai:
+    language = st.selectbox("Select Language for Playlist Names", ["English", "Spanish", "French", "German"])
 num_playlists = st.number_input("Number of Playlists", min_value=1, value=3, step=1)
 tracks_per_playlist = st.number_input("Tracks per Playlist", min_value=1, value=20, step=1)
-language = st.selectbox("Select Language for Playlist Names", ["English", "Spanish", "French", "German"])
-use_openai = st.checkbox("Use OpenAI for Playlist Names")
 
 if st.button("Create Playlists"):
     if uploaded_file is not None:
         with st.spinner("Processing playlists..."):
-            message, playlists = process_playlists(uploaded_file, num_playlists, tracks_per_playlist, language, use_openai)
+            message, playlists = process_playlists(uploaded_file, num_playlists, tracks_per_playlist, language if use_openai else None, use_openai)
 
         st.write(message)
 
