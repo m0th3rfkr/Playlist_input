@@ -27,22 +27,27 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
     for _ in range(num_playlists):
         playlist = []
         used_artists = {}
+        used_titles = set()
         remaining_tracks = data.copy()
 
         while len(playlist) < tracks_per_playlist:
             valid_tracks = remaining_tracks[~remaining_tracks['artist'].isin(
                 [artist for artist, count in used_artists.items() if count >= 3]
-            )]
+            ) & ~remaining_tracks['title'].isin(used_titles)]
 
             if valid_tracks.empty:
                 break
 
-            selected_track = valid_tracks.sample(1).iloc[0]
+            # Use weighted sampling based on the 'Number of Streams'
+            valid_tracks['weight'] = valid_tracks['Number of Streams'] / valid_tracks['Number of Streams'].sum()
+            selected_track = valid_tracks.sample(1, weights='weight').iloc[0]
+
             playlist.append(selected_track)
 
-            # Update artist usage and remaining tracks
+            # Update artist usage, used titles, and remaining tracks
             artist = selected_track['artist']
             used_artists[artist] = used_artists.get(artist, 0) + 1
+            used_titles.add(selected_track['title'])
             remaining_tracks = remaining_tracks[remaining_tracks['isrc'] != selected_track['isrc']]
 
         playlists.append(pd.DataFrame(playlist))
@@ -69,16 +74,17 @@ def process_playlists(file, num_playlists, tracks_per_playlist):
     except Exception as e:
         return f"Error reading Excel file: {e}", None
 
-    required_columns = ['Recording Artist', 'Recording Title', 'ISRC']
+    required_columns = ['Recording Artist', 'Recording Title', 'ISRC', 'Number of Streams']
     if not all(col in data.columns for col in required_columns):
         return ("The uploaded file does not contain the required columns: "
-                "'Recording Artist', 'Recording Title', 'ISRC'. Please check your file and try again."), None
+                "'Recording Artist', 'Recording Title', 'ISRC', 'Number of Streams'. Please check your file and try again."), None
 
     data = data[required_columns]
     data.rename(columns={
         'Recording Artist': 'artist',
         'Recording Title': 'title',
-        'ISRC': 'isrc'
+        'ISRC': 'isrc',
+        'Number of Streams': 'streams'
     }, inplace=True)
     data.dropna(inplace=True)
 
@@ -96,7 +102,7 @@ def process_playlists(file, num_playlists, tracks_per_playlist):
     results = []
     for i, playlist in enumerate(playlists):
         playlist['Playlist Name'] = playlist_names[i]
-        results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc']])
+        results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc', 'streams']])
 
     return "Playlists generated successfully!", results
 
