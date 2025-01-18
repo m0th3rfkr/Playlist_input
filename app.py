@@ -60,11 +60,11 @@ def suggest_playlist_names(num_playlists):
 
 def process_playlists(file, num_playlists, tracks_per_playlist):
     """Main function to process playlists and return results."""
-    data = pd.read_excel(file, sheet_name='Songs That Speak of Love')[['Recording Artist', 'Recording Title', 'ISRCs']]
+    data = pd.read_excel(file, sheet_name=0)[['Recording Artist', 'Recording Title', 'ISRC']]
     data.rename(columns={
         'Recording Artist': 'artist',
         'Recording Title': 'title',
-        'ISRCs': 'isrc'
+        'ISRC': 'isrc'
     }, inplace=True)
     data.dropna(inplace=True)
 
