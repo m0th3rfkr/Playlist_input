@@ -40,7 +40,7 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
                 break
 
             if 'streams' in valid_tracks.columns:
-                # Use weighted sampling based on the 'streams' column
+                valid_tracks = valid_tracks.copy()  # Prevent SettingWithCopyWarning
                 valid_tracks['weight'] = valid_tracks['streams'] / valid_tracks['streams'].sum()
                 selected_track = valid_tracks.sample(1, weights='weight').iloc[0]
             else:
@@ -68,8 +68,13 @@ def suggest_playlist_names(num_playlists):
                 {"role": "user", "content": f"Generate {num_playlists} playlist names that are fun and unique."}
             ]
         )
-        st.write("OpenAI API Response:", response)  # Log the full response
-        return [choice['message']['content'] for choice in response['choices']]
+        # Extract names from the OpenAI API response
+        if 'choices' in response:
+            playlist_names = [choice['message']['content'].strip() for choice in response['choices']]
+            return playlist_names[:num_playlists]  # Ensure only the required number of names is returned
+        else:
+            st.error("Unexpected response format from OpenAI API.")
+            return [f"Playlist {i + 1}" for i in range(num_playlists)]
     except Exception as e:
         st.error(f"Error with OpenAI API: {e}")
         return [f"Playlist {i + 1}" for i in range(num_playlists)]
