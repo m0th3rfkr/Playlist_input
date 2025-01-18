@@ -59,15 +59,18 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
         playlists.append(pd.DataFrame(playlist))
     return playlists
 
-def suggest_playlist_names(num_playlists, language="English", adjectives=[]):
+def suggest_playlist_names(num_playlists, language="English", adjectives=[], song_titles=[], inspiration_titles=[]):
     """Use OpenAI API to suggest playlist names in the specified language."""
     try:
         adjective_list = ", ".join(adjectives) if adjectives else "fun and unique"
+        song_titles_text = ", ".join(song_titles)
+        inspiration_titles_text = ", ".join(inspiration_titles)
+
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": f"Suggest creative playlist names based on the following songs in {language}."},
-                {"role": "user", "content": f"Generate {num_playlists} playlist names that are {adjective_list}."}
+                {"role": "system", "content": f"Suggest creative playlist names based on the following songs: {song_titles_text} in {language}."},
+                {"role": "user", "content": f"Use these as inspiration: {inspiration_titles_text}. Generate {num_playlists} playlist names that are {adjective_list}."}
             ]
         )
         # Extract names from the OpenAI API response
@@ -86,6 +89,7 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
     """Main function to process playlists and return results."""
     try:
         data = pd.read_excel(file, sheet_name=0)
+        inspiration_data = pd.read_excel(file, sheet_name="Playlist Titles")
     except Exception as e:
         return f"Error reading Excel file: {e}", None
 
@@ -113,8 +117,8 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
 
     if use_openai:
         song_titles = [track['title'] for playlist in playlists for _, track in playlist.iterrows()]
-        theme = ", ".join(song_titles)
-        playlist_names = suggest_playlist_names(num_playlists, language, adjectives)
+        inspiration_titles = inspiration_data['Playlist Titles'].dropna().tolist()
+        playlist_names = suggest_playlist_names(num_playlists, language, adjectives, song_titles, inspiration_titles)
         # Ensure there are enough names for the playlists
         if len(playlist_names) < len(playlists):
             playlist_names += [f"Playlist {i + 1}" for i in range(len(playlist_names), len(playlists))]
