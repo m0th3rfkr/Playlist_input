@@ -60,7 +60,7 @@ def suggest_playlist_names(num_playlists):
         )
         return [choice.message['content'] for choice in response.choices]
     except Exception as e:
-        return [f"Error generating names: {e}"]
+        return [f"Playlist {i + 1}" for i in range(num_playlists)]
 
 def process_playlists(file, num_playlists, tracks_per_playlist):
     """Main function to process playlists and return results."""
@@ -88,6 +88,10 @@ def process_playlists(file, num_playlists, tracks_per_playlist):
 
     playlists = generate_playlists(data, num_playlists, tracks_per_playlist)
     playlist_names = suggest_playlist_names(num_playlists)
+
+    # Ensure there are enough names for the playlists
+    if len(playlist_names) < len(playlists):
+        playlist_names += [f"Playlist {i + 1}" for i in range(len(playlist_names), len(playlists))]
 
     results = []
     for i, playlist in enumerate(playlists):
