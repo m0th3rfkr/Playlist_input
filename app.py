@@ -58,13 +58,13 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
         playlists.append(pd.DataFrame(playlist))
     return playlists
 
-def suggest_playlist_names(num_playlists):
-    """Use OpenAI API to suggest playlist names."""
+def suggest_playlist_names(num_playlists, language="English"):
+    """Use OpenAI API to suggest playlist names in the specified language."""
     try:
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "Suggest creative playlist names based on themes of love and music."},
+                {"role": "system", "content": f"Suggest creative playlist names based on themes of love and music in {language}."},
                 {"role": "user", "content": f"Generate {num_playlists} playlist names that are fun and unique."}
             ]
         )
@@ -79,7 +79,7 @@ def suggest_playlist_names(num_playlists):
         st.error(f"Error with OpenAI API: {e}")
         return [f"Playlist {i + 1}" for i in range(num_playlists)]
 
-def process_playlists(file, num_playlists, tracks_per_playlist):
+def process_playlists(file, num_playlists, tracks_per_playlist, language):
     """Main function to process playlists and return results."""
     try:
         data = pd.read_excel(file, sheet_name=0)
@@ -107,7 +107,7 @@ def process_playlists(file, num_playlists, tracks_per_playlist):
         return message, None
 
     playlists = generate_playlists(data, num_playlists, tracks_per_playlist)
-    playlist_names = suggest_playlist_names(num_playlists)
+    playlist_names = suggest_playlist_names(num_playlists, language)
 
     # Ensure there are enough names for the playlists
     if len(playlist_names) < len(playlists):
@@ -133,11 +133,12 @@ st.write("Upload an Excel file to generate playlists with specific rules.")
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 num_playlists = st.number_input("Number of Playlists", min_value=1, value=3, step=1)
 tracks_per_playlist = st.number_input("Tracks per Playlist", min_value=1, value=20, step=1)
+language = st.selectbox("Select Language for Playlist Names", ["English", "Spanish", "French", "German"])
 
 if st.button("Create Playlists"):
     if uploaded_file is not None:
         with st.spinner("Processing playlists..."):
-            message, playlists = process_playlists(uploaded_file, num_playlists, tracks_per_playlist)
+            message, playlists = process_playlists(uploaded_file, num_playlists, tracks_per_playlist, language)
 
         st.write(message)
 
