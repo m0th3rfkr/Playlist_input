@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 import os
+import re
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
@@ -128,7 +129,7 @@ def save_to_excel(playlists, output_filename):
     """Save playlists to an Excel file with each playlist as a separate sheet."""
     with pd.ExcelWriter(output_filename) as writer:
         for i, playlist in enumerate(playlists):
-            sheet_name = playlist['Playlist Name'].iloc[0][:31]  # Ensure sheet name is valid
+            sheet_name = re.sub(r'[\\/*?:\[\]]', '_', playlist['Playlist Name'].iloc[0])[:31]  # Ensure sheet name is valid
             playlist.to_excel(writer, sheet_name=sheet_name, index=False)
 
 # Streamlit Interface
