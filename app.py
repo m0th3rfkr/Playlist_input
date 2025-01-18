@@ -2,6 +2,11 @@ import random
 from openai import ChatCompletion
 import pandas as pd
 import streamlit as st
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
 
 def validate_playlist_rules(data, num_playlists, tracks_per_playlist):
     """Validate if the playlists can be created based on the rules."""
