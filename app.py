@@ -24,10 +24,11 @@ def validate_playlist_rules(data, num_playlists, tracks_per_playlist):
 def generate_playlists(data, num_playlists, tracks_per_playlist):
     """Generate playlists based on the rules."""
     playlists = []
+    used_isrcs = set()  # Track ISRCs globally across all playlists
+
     for _ in range(num_playlists):
         playlist = []
         used_artists = {}
-        used_isrcs = set()
         remaining_tracks = data.copy()
 
         while len(playlist) < tracks_per_playlist:
@@ -67,7 +68,7 @@ def suggest_playlist_names(num_playlists):
                 {"role": "user", "content": f"Generate {num_playlists} playlist names that are fun and unique."}
             ]
         )
-        return [msg['content'] for msg in response['choices']]
+        return [choice['message']['content'] for choice in response['choices']]
     except Exception as e:
         return [f"Playlist {i + 1}" for i in range(num_playlists)]
 
