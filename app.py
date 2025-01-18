@@ -148,8 +148,8 @@ if use_openai:
     try:
         with open(adjectives_file, "r") as file:
             adjectives_list = [line.strip() for line in file.readlines()]
-        user_adjective = st.text_input("Or write your own adjective")
         adjectives = st.multiselect("Select adjectives for playlist names", adjectives_list)
+        user_adjective = st.text_input("Or write your own adjective")
         if user_adjective:
             adjectives.append(user_adjective)
     except FileNotFoundError:
