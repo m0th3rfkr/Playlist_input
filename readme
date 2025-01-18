@@ -1,0 +1,7 @@
+Playlist Generator
+Genera playlists basadas en reglas personalizadas a partir de un archivo Excel. Incluye características como:
+
+Restricciones en la repetición de artistas.
+Validación automática para asegurar que las playlists se puedan generar.
+Sugerencias de nombres creativos para las playlists utilizando la API de ChatGPT.
+Interfaz gráfica amigable con Streamlit.
