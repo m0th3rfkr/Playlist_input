@@ -142,11 +142,18 @@ st.write("Upload an Excel file to generate playlists with specific rules.")
 uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 use_openai = st.checkbox("Use OpenAI for Playlist Names")
 adjectives = []
+adjectives_file = "adjectives.txt"
+
 if use_openai:
-    adjectives_input = st.text_area("Enter a list of 100 adjectives (comma-separated) or leave blank for default.")
-    if adjectives_input:
-        adjectives = [adj.strip() for adj in adjectives_input.split(",")]
+    try:
+        with open(adjectives_file, "r") as file:
+            adjectives_list = [line.strip() for line in file.readlines()]
+        adjectives = st.multiselect("Select adjectives for playlist names", adjectives_list)
+    except FileNotFoundError:
+        st.error(f"Adjective file '{adjectives_file}' not found.")
+
     language = st.selectbox("Select Language for Playlist Names", ["English", "Spanish", "French", "German"])
+
 num_playlists = st.number_input("Number of Playlists", min_value=1, value=3, step=1)
 tracks_per_playlist = st.number_input("Tracks per Playlist", min_value=1, value=20, step=1)
 
