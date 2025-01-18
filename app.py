@@ -60,7 +60,17 @@ def suggest_playlist_names(num_playlists):
 
 def process_playlists(file, num_playlists, tracks_per_playlist):
     """Main function to process playlists and return results."""
-    data = pd.read_excel(file, sheet_name=0)[['Recording Artist', 'Recording Title', 'ISRC']]
+    try:
+        data = pd.read_excel(file, sheet_name=0)
+    except Exception as e:
+        return f"Error reading Excel file: {e}", None
+
+    required_columns = ['Recording Artist', 'Recording Title', 'ISRC']
+    if not all(col in data.columns for col in required_columns):
+        return ("The uploaded file does not contain the required columns: "
+                "'Recording Artist', 'Recording Title', 'ISRC'. Please check your file and try again."), None
+
+    data = data[required_columns]
     data.rename(columns={
         'Recording Artist': 'artist',
         'Recording Title': 'title',
