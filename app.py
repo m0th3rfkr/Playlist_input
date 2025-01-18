@@ -27,13 +27,13 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
     for _ in range(num_playlists):
         playlist = []
         used_artists = {}
-        used_titles = set()
+        used_isrcs = set()
         remaining_tracks = data.copy()
 
         while len(playlist) < tracks_per_playlist:
             valid_tracks = remaining_tracks[~remaining_tracks['artist'].isin(
                 [artist for artist, count in used_artists.items() if count >= 3]
-            ) & ~remaining_tracks['title'].isin(used_titles)]
+            ) & ~remaining_tracks['isrc'].isin(used_isrcs)]
 
             if valid_tracks.empty:
                 break
@@ -48,10 +48,10 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
 
             playlist.append(selected_track)
 
-            # Update artist usage, used titles, and remaining tracks
+            # Update artist usage, used ISRCs, and remaining tracks
             artist = selected_track['artist']
             used_artists[artist] = used_artists.get(artist, 0) + 1
-            used_titles.add(selected_track['title'])
+            used_isrcs.add(selected_track['isrc'])
             remaining_tracks = remaining_tracks[remaining_tracks['isrc'] != selected_track['isrc']]
 
         playlists.append(pd.DataFrame(playlist))
