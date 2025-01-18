@@ -38,9 +38,13 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
             if valid_tracks.empty:
                 break
 
-            # Use weighted sampling based on the 'Number of Streams'
-            valid_tracks['weight'] = valid_tracks['Number of Streams'] / valid_tracks['Number of Streams'].sum()
-            selected_track = valid_tracks.sample(1, weights='weight').iloc[0]
+            if 'streams' in valid_tracks.columns:
+                # Use weighted sampling based on the 'streams' column
+                valid_tracks['weight'] = valid_tracks['streams'] / valid_tracks['streams'].sum()
+                selected_track = valid_tracks.sample(1, weights='weight').iloc[0]
+            else:
+                # If no 'streams' column, select randomly
+                selected_track = valid_tracks.sample(1).iloc[0]
 
             playlist.append(selected_track)
 
@@ -74,12 +78,14 @@ def process_playlists(file, num_playlists, tracks_per_playlist):
     except Exception as e:
         return f"Error reading Excel file: {e}", None
 
-    required_columns = ['Recording Artist', 'Recording Title', 'ISRC', 'Number of Streams']
+    required_columns = ['Recording Artist', 'Recording Title', 'ISRC']
+    optional_columns = ['Number of Streams']
+
     if not all(col in data.columns for col in required_columns):
         return ("The uploaded file does not contain the required columns: "
-                "'Recording Artist', 'Recording Title', 'ISRC', 'Number of Streams'. Please check your file and try again."), None
+                "'Recording Artist', 'Recording Title', 'ISRC'. Please check your file and try again."), None
 
-    data = data[required_columns]
+    data = data[required_columns + [col for col in optional_columns if col in data.columns]]
     data.rename(columns={
         'Recording Artist': 'artist',
         'Recording Title': 'title',
@@ -102,7 +108,7 @@ def process_playlists(file, num_playlists, tracks_per_playlist):
     results = []
     for i, playlist in enumerate(playlists):
         playlist['Playlist Name'] = playlist_names[i]
-        results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc', 'streams']])
+        results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc'] + (['streams'] if 'streams' in data.columns else [])])
 
     return "Playlists generated successfully!", results
 
