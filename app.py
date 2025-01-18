@@ -67,7 +67,7 @@ def suggest_playlist_names(num_playlists):
                 {"role": "user", "content": f"Generate {num_playlists} playlist names that are fun and unique."}
             ]
         )
-        return [choice.message['content'] for choice in response.choices]
+        return [msg['content'] for msg in response['choices']]
     except Exception as e:
         return [f"Playlist {i + 1}" for i in range(num_playlists)]
 
