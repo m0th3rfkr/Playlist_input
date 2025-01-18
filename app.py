@@ -72,7 +72,7 @@ def suggest_playlist_names(num_playlists, language="English"):
         if 'choices' in response:
             playlist_names = response['choices'][0]['message']['content'].split("\n")
             # Ensure only the required number of names is returned
-            return [name.split(".", 1)[-1].strip() for name in playlist_names if name.strip()][:num_playlists]
+            return [name.split(".", 1)[-1].strip().strip('"') for name in playlist_names if name.strip()][:num_playlists]
         else:
             st.error("Unexpected response format from OpenAI API.")
             return [f"Playlist {i + 1}" for i in range(num_playlists)]
