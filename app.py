@@ -50,14 +50,17 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
 
 def suggest_playlist_names(num_playlists):
     """Use OpenAI API to suggest playlist names."""
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "Suggest creative playlist names based on themes of love and music."},
-            {"role": "user", "content": f"Generate {num_playlists} playlist names that are fun and unique."}
-        ]
-    )
-    return [choice['message']['content'] for choice in response['choices']]
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "Suggest creative playlist names based on themes of love and music."},
+                {"role": "user", "content": f"Generate {num_playlists} playlist names that are fun and unique."}
+            ]
+        )
+        return [choice.message['content'] for choice in response.choices]
+    except Exception as e:
+        return [f"Error generating names: {e}"]
 
 def process_playlists(file, num_playlists, tracks_per_playlist):
     """Main function to process playlists and return results."""
