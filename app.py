@@ -70,8 +70,9 @@ def suggest_playlist_names(num_playlists, language="English"):
         )
         # Extract names from the OpenAI API response
         if 'choices' in response:
-            playlist_names = [choice['message']['content'].strip() for choice in response['choices']]
-            return playlist_names[:num_playlists]  # Ensure only the required number of names is returned
+            playlist_names = response['choices'][0]['message']['content'].split("\n")
+            # Ensure only the required number of names is returned
+            return [name.strip() for name in playlist_names if name.strip()][:num_playlists]
         else:
             st.error("Unexpected response format from OpenAI API.")
             return [f"Playlist {i + 1}" for i in range(num_playlists)]
@@ -124,7 +125,8 @@ def save_to_excel(playlists, output_filename):
     """Save playlists to an Excel file with each playlist as a separate sheet."""
     with pd.ExcelWriter(output_filename) as writer:
         for i, playlist in enumerate(playlists):
-            playlist.to_excel(writer, sheet_name=f"Playlist {i + 1}", index=False)
+            sheet_name = playlist['Playlist Name'].iloc[0][:31]  # Ensure sheet name is valid
+            playlist.to_excel(writer, sheet_name=sheet_name, index=False)
 
 # Streamlit Interface
 st.title("Playlist Generator")
@@ -144,7 +146,7 @@ if st.button("Create Playlists"):
 
         if playlists:
             for i, playlist in enumerate(playlists):
-                st.subheader(f"Playlist {i + 1}")
+                st.subheader(f"Playlist {playlist['Playlist Name'].iloc[0]}")
                 st.write(playlist.to_html(index=False, escape=False), unsafe_allow_html=True)
 
             # Add a download button for the Excel file
