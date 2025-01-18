@@ -80,7 +80,7 @@ def suggest_playlist_names(num_playlists, language="English"):
         st.error(f"Error with OpenAI API: {e}")
         return [f"Playlist {i + 1}" for i in range(num_playlists)]
 
-def process_playlists(file, num_playlists, tracks_per_playlist, language):
+def process_playlists(file, num_playlists, tracks_per_playlist, language, use_openai):
     """Main function to process playlists and return results."""
     try:
         data = pd.read_excel(file, sheet_name=0)
@@ -108,11 +108,14 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language):
         return message, None
 
     playlists = generate_playlists(data, num_playlists, tracks_per_playlist)
-    playlist_names = suggest_playlist_names(num_playlists, language)
 
-    # Ensure there are enough names for the playlists
-    if len(playlist_names) < len(playlists):
-        playlist_names += [f"Playlist {i + 1}" for i in range(len(playlist_names), len(playlists))]
+    if use_openai:
+        playlist_names = suggest_playlist_names(num_playlists, language)
+        # Ensure there are enough names for the playlists
+        if len(playlist_names) < len(playlists):
+            playlist_names += [f"Playlist {i + 1}" for i in range(len(playlist_names), len(playlists))]
+    else:
+        playlist_names = [f"Playlist {i + 1}" for i in range(num_playlists)]
 
     results = []
     for i, playlist in enumerate(playlists):
@@ -136,11 +139,12 @@ uploaded_file = st.file_uploader("Upload Excel File", type=["xlsx"])
 num_playlists = st.number_input("Number of Playlists", min_value=1, value=3, step=1)
 tracks_per_playlist = st.number_input("Tracks per Playlist", min_value=1, value=20, step=1)
 language = st.selectbox("Select Language for Playlist Names", ["English", "Spanish", "French", "German"])
+use_openai = st.checkbox("Use OpenAI for Playlist Names")
 
 if st.button("Create Playlists"):
     if uploaded_file is not None:
         with st.spinner("Processing playlists..."):
-            message, playlists = process_playlists(uploaded_file, num_playlists, tracks_per_playlist, language)
+            message, playlists = process_playlists(uploaded_file, num_playlists, tracks_per_playlist, language, use_openai)
 
         st.write(message)
 
