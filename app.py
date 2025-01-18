@@ -68,8 +68,10 @@ def suggest_playlist_names(num_playlists):
                 {"role": "user", "content": f"Generate {num_playlists} playlist names that are fun and unique."}
             ]
         )
+        st.write("OpenAI API Response:", response)  # Log the full response
         return [choice['message']['content'] for choice in response['choices']]
     except Exception as e:
+        st.error(f"Error with OpenAI API: {e}")
         return [f"Playlist {i + 1}" for i in range(num_playlists)]
 
 def process_playlists(file, num_playlists, tracks_per_playlist):
