@@ -150,19 +150,19 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
     results = []
     for i, playlist in enumerate(playlists):
         playlist_key = f"playlist_{i}"
-        playlist_name_key = f"playlist_name_{i}"
-
         if playlist_key not in st.session_state:
             st.session_state[playlist_key] = playlist.copy()
 
+        playlist_name_key = f"playlist_name_{i}"
         if playlist_name_key not in st.session_state:
             st.session_state[playlist_name_key] = playlist_names[i]
 
         new_name = st.text_input(f"Edit Playlist Name for Playlist {i + 1}",
-                                 value=st.session_state[playlist_name_key],
+                                 value=st.session_state.get(playlist_name_key),
                                  key=playlist_name_key)
 
         st.session_state[playlist_name_key] = new_name
+
         playlist['Playlist Name'] = st.session_state[playlist_name_key]
 
         exclude_keys = [f"exclude_{i}_{j}" for j in range(len(playlist))]
