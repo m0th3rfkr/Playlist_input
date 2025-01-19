@@ -157,9 +157,14 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
         if playlist_name_key not in st.session_state:
             st.session_state[playlist_name_key] = playlist_names[i]
 
-        playlist['Playlist Name'] = st.text_input(f"Edit Playlist Name for Playlist {i + 1}",
-                                                  value=st.session_state[playlist_name_key],
-                                                  key=playlist_name_key)
+        new_name = st.text_input(f"Edit Playlist Name for Playlist {i + 1}",
+                                 value=st.session_state[playlist_name_key],
+                                 key=playlist_name_key)
+
+        if new_name != st.session_state[playlist_name_key]:
+            st.session_state[playlist_name_key] = new_name
+
+        playlist['Playlist Name'] = st.session_state[playlist_name_key]
 
         exclude_keys = [f"exclude_{i}_{j}" for j in range(len(playlist))]
         for j, exclude_key in enumerate(exclude_keys):
