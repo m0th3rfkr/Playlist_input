@@ -154,8 +154,6 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
             st.session_state[playlist_key] = playlist.copy()
 
         playlist_name_key = f"playlist_name_{i}"
-        exclude_key = f"exclude_{i}"
-
         if playlist_name_key not in st.session_state:
             st.session_state[playlist_name_key] = playlist_names[i]
 
@@ -163,8 +161,14 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
                                                   value=st.session_state[playlist_name_key],
                                                   key=playlist_name_key)
 
-        playlist['Exclude from Excel'] = st.checkbox(f"Exclude track from Playlist {i + 1}",
-                                                     key=exclude_key)
+        exclude_keys = [f"exclude_{i}_{j}" for j in range(len(playlist))]
+        for j, exclude_key in enumerate(exclude_keys):
+            if exclude_key not in st.session_state:
+                st.session_state[exclude_key] = False
+            playlist.loc[j, 'Exclude from Excel'] = st.checkbox(
+                f"Exclude track {j + 1} from Playlist {i + 1}",
+                key=exclude_key
+            )
 
         results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc', 'Exclude from Excel'] + (['streams'] if 'streams' in data.columns else [])])
 
