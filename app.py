@@ -158,10 +158,10 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
             st.session_state[playlist_name_key] = playlist_names[i]
 
         new_name = st.text_input(f"Edit Playlist Name for Playlist {i + 1}",
-                                 value=st.session_state[playlist_name_key],
+                                 value=st.session_state.get(playlist_name_key, playlist_names[i]),
                                  key=playlist_name_key)
 
-        if new_name != st.session_state[playlist_name_key]:
+        if new_name != st.session_state.get(playlist_name_key):
             st.session_state[playlist_name_key] = new_name
 
         playlist['Playlist Name'] = st.session_state[playlist_name_key]
