@@ -63,25 +63,40 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
         playlists.append(pd.DataFrame(playlist))
     return playlists
 
-def suggest_playlist_names(num_playlists, language="English", adjectives=[], song_titles=[], inspiration_titles=[], slang=None):
-    """Use OpenAI API to suggest playlist names in the specified language."""
+def analyze_playlist_theme(song_titles, language):
+    """Analyze the playlist theme using OpenAI."""
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": f"Analyze the theme of the following playlist songs in {language}."},
+                {"role": "user", "content": ", ".join(song_titles)}
+            ]
+        )
+        if 'choices' in response:
+            return response['choices'][0]['message']['content'].strip()
+        else:
+            return "Unknown Theme"
+    except Exception as e:
+        st.error(f"Error with OpenAI API: {e}")
+        return "Unknown Theme"
+
+def suggest_playlist_names(theme, inspiration_titles, num_playlists, language, adjectives, slang):
+    """Use OpenAI API to suggest playlist names based on the theme."""
     try:
         adjective_list = ", ".join(adjectives) if adjectives else "fun and unique"
-        song_titles_text = ", ".join(song_titles)
-        inspiration_titles_text = ", ".join(inspiration_titles)
+        inspiration_titles_text = random.choice(inspiration_titles) if inspiration_titles else ""
         slang_text = f"using {slang} slang." if slang else ""
 
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": f"Suggest creative playlist names based on the following songs: {song_titles_text} in {language}. {slang_text}"},
-                {"role": "user", "content": f"Use these as inspiration: {inspiration_titles_text}. Generate {num_playlists} playlist names that are {adjective_list}."}
+                {"role": "system", "content": f"Suggest creative playlist names based on the theme: '{theme}' in {language}. {slang_text}"},
+                {"role": "user", "content": f"Use this inspiration: '{inspiration_titles_text}'. Generate {num_playlists} playlist names that are {adjective_list}."}
             ]
         )
-        # Extract names from the OpenAI API response
         if 'choices' in response:
             playlist_names = response['choices'][0]['message']['content'].split("\n")
-            # Ensure only the required number of names is returned
             return [name.split(".", 1)[-1].strip().strip('"') for name in playlist_names if name.strip()][:num_playlists]
         else:
             st.error("Unexpected response format from OpenAI API.")
@@ -122,9 +137,9 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
 
     if use_openai:
         song_titles = [track['title'] for playlist in playlists for _, track in playlist.iterrows()]
+        theme = analyze_playlist_theme(song_titles, language)
         inspiration_titles = inspiration_data['Playlist Titles'].dropna().tolist()
-        playlist_names = suggest_playlist_names(num_playlists, language, adjectives, song_titles, inspiration_titles, slang)
-        # Ensure there are enough names for the playlists
+        playlist_names = suggest_playlist_names(theme, inspiration_titles, num_playlists, language, adjectives, slang)
         if len(playlist_names) < len(playlists):
             playlist_names += [f"Playlist {i + 1}" for i in range(len(playlist_names), len(playlists))]
     else:
