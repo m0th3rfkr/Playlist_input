@@ -152,14 +152,12 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
         playlist_key = f"playlist_{i}"
         playlist_name_key = f"playlist_name_{i}"
 
+        # Initialize session state only if it does not already exist
         if playlist_key not in st.session_state:
             st.session_state[playlist_key] = playlist.copy()
 
-        if playlist_name_key not in st.session_state:
-            st.session_state[playlist_name_key] = playlist_names[i]
-
         new_name = st.text_input(f"Edit Playlist Name for Playlist {i + 1}",
-                                 value=st.session_state[playlist_name_key],
+                                 value=st.session_state.get(playlist_name_key, playlist_names[i]),
                                  key=playlist_name_key)
 
         st.session_state[playlist_name_key] = new_name
