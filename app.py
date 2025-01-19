@@ -60,7 +60,9 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
             used_isrcs.add(selected_track['isrc'])
             remaining_tracks = remaining_tracks[remaining_tracks['isrc'] != selected_track['isrc']]
 
-        playlists.append(pd.DataFrame(playlist))
+        playlist_df = pd.DataFrame(playlist)
+        playlist_df['Exclude from Excel'] = False
+        playlists.append(playlist_df)
     return playlists
 
 def analyze_playlist_theme(song_titles, language):
@@ -148,7 +150,7 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
     results = []
     for i, playlist in enumerate(playlists):
         playlist['Playlist Name'] = st.text_input(f"Edit Playlist Name for Playlist {i + 1}", value=playlist_names[i])
-        playlist['Exclude from Excel'] = st.checkbox(f"Exclude Playlist {i + 1} from Excel")
+        playlist['Exclude from Excel'] = st.checkbox(f"Exclude track from Playlist {i + 1}", key=f"exclude_{i}")
         results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc', 'Exclude from Excel'] + (['streams'] if 'streams' in data.columns else [])])
 
     return "Playlists generated successfully!", results
@@ -157,9 +159,10 @@ def save_to_excel(playlists, output_filename):
     """Save playlists to an Excel file with each playlist as a separate sheet."""
     with pd.ExcelWriter(output_filename) as writer:
         for i, playlist in enumerate(playlists):
-            if not playlist['Exclude from Excel'].iloc[0]:
-                sheet_name = re.sub(r'[\\/*?:\[\]]', '_', playlist['Playlist Name'].iloc[0])[:31]  # Ensure sheet name is valid
-                playlist.to_excel(writer, sheet_name=sheet_name, index=False)
+            filtered_playlist = playlist[~playlist['Exclude from Excel']]
+            if not filtered_playlist.empty:
+                sheet_name = re.sub(r'[\\/*?:\[\]]', '_', filtered_playlist['Playlist Name'].iloc[0])[:31]  # Ensure sheet name is valid
+                filtered_playlist.to_excel(writer, sheet_name=sheet_name, index=False)
 
 # Streamlit Interface
 st.title("Playlist Generator")
