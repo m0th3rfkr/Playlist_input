@@ -48,6 +48,10 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
                 # If no 'streams' column, select randomly
                 selected_track = valid_tracks.sample(1).iloc[0]
 
+            # Ensure no consecutive tracks by the same artist
+            if playlist and playlist[-1]['artist'] == selected_track['artist']:
+                continue
+
             playlist.append(selected_track)
 
             # Update artist usage, used ISRCs, and remaining tracks
