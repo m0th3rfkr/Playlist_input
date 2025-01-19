@@ -152,7 +152,6 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
         playlist_key = f"playlist_{i}"
         playlist_name_key = f"playlist_name_{i}"
 
-        # Initialize session state only if it does not already exist
         if playlist_key not in st.session_state:
             st.session_state[playlist_key] = playlist.copy()
 
@@ -160,18 +159,16 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
                                  value=st.session_state.get(playlist_name_key, playlist_names[i]),
                                  key=playlist_name_key)
 
-        st.session_state[playlist_name_key] = new_name
-        playlist['Playlist Name'] = st.session_state[playlist_name_key]
+        track_exclusions = st.text_input(f"Want to take out some tracks? Write the #s, separated by commas (Playlist {i + 1})",
+                                         key=f"exclude_tracks_{i}")
 
-        exclude_keys = [f"exclude_{i}_{j}" for j in range(len(playlist))]
-        for j, exclude_key in enumerate(exclude_keys):
-            if exclude_key not in st.session_state:
-                st.session_state[exclude_key] = False
-            playlist.loc[j, 'Exclude from Excel'] = st.checkbox(
-                f"Exclude track {j + 1} from Playlist {i + 1}",
-                key=exclude_key,
-                value=st.session_state[exclude_key]
-            )
+        if st.button(f"Save changes for Playlist {i + 1}"):
+            st.session_state[playlist_name_key] = new_name
+            exclude_indices = [int(x.strip()) - 1 for x in track_exclusions.split(',') if x.strip().isdigit()]
+            playlist['Exclude from Excel'] = False
+            playlist.loc[exclude_indices, 'Exclude from Excel'] = True
+
+        playlist['Playlist Name'] = st.session_state[playlist_name_key]
 
         results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc', 'Exclude from Excel'] + (['streams'] if 'streams' in data.columns else [])])
 
