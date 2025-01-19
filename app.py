@@ -60,9 +60,7 @@ def generate_playlists(data, num_playlists, tracks_per_playlist):
             used_isrcs.add(selected_track['isrc'])
             remaining_tracks = remaining_tracks[remaining_tracks['isrc'] != selected_track['isrc']]
 
-        playlist_df = pd.DataFrame(playlist)
-        playlist_df['Exclude from Excel'] = False
-        playlists.append(playlist_df)
+        playlists.append(pd.DataFrame(playlist))
     return playlists
 
 def analyze_playlist_theme(song_titles, language):
@@ -149,32 +147,8 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
 
     results = []
     for i, playlist in enumerate(playlists):
-        playlist_key = f"playlist_{i}"
-        if playlist_key not in st.session_state:
-            st.session_state[playlist_key] = playlist.copy()
-
-        playlist_name_key = f"playlist_name_{i}"
-        if playlist_name_key not in st.session_state:
-            st.session_state[playlist_name_key] = playlist_names[i]
-
-        new_name = st.text_input(f"Edit Playlist Name for Playlist {i + 1}",
-                                 value=st.session_state.get(playlist_name_key),
-                                 key=playlist_name_key)
-
-        st.session_state[playlist_name_key] = new_name
-
-        playlist['Playlist Name'] = st.session_state[playlist_name_key]
-
-        exclude_keys = [f"exclude_{i}_{j}" for j in range(len(playlist))]
-        for j, exclude_key in enumerate(exclude_keys):
-            if exclude_key not in st.session_state:
-                st.session_state[exclude_key] = False
-            playlist.loc[j, 'Exclude from Excel'] = st.checkbox(
-                f"Exclude track {j + 1} from Playlist {i + 1}",
-                key=exclude_key,
-                value=st.session_state[exclude_key]
-            )
-
+        playlist['Playlist Name'] = st.text_input(f"Edit Playlist Name for Playlist {i + 1}", value=playlist_names[i])
+        playlist['Exclude from Excel'] = st.checkbox(f"Exclude Playlist {i + 1} from Excel")
         results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc', 'Exclude from Excel'] + (['streams'] if 'streams' in data.columns else [])])
 
     return "Playlists generated successfully!", results
@@ -183,10 +157,9 @@ def save_to_excel(playlists, output_filename):
     """Save playlists to an Excel file with each playlist as a separate sheet."""
     with pd.ExcelWriter(output_filename) as writer:
         for i, playlist in enumerate(playlists):
-            filtered_playlist = playlist[~playlist['Exclude from Excel']]
-            if not filtered_playlist.empty:
-                sheet_name = re.sub(r'[\\/*?:\[\]]', '_', filtered_playlist['Playlist Name'].iloc[0])[:31]  # Ensure sheet name is valid
-                filtered_playlist.to_excel(writer, sheet_name=sheet_name, index=False)
+            if not playlist['Exclude from Excel'].iloc[0]:
+                sheet_name = re.sub(r'[\\/*?:\[\]]', '_', playlist['Playlist Name'].iloc[0])[:31]  # Ensure sheet name is valid
+                playlist.to_excel(writer, sheet_name=sheet_name, index=False)
 
 # Streamlit Interface
 st.title("Playlist Generator")
