@@ -158,11 +158,10 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
             st.session_state[playlist_name_key] = playlist_names[i]
 
         new_name = st.text_input(f"Edit Playlist Name for Playlist {i + 1}",
-                                 value=st.session_state.get(playlist_name_key, playlist_names[i]),
+                                 value=st.session_state.get(playlist_name_key),
                                  key=playlist_name_key)
 
-        if new_name != st.session_state.get(playlist_name_key):
-            st.session_state[playlist_name_key] = new_name
+        st.session_state[playlist_name_key] = new_name
 
         playlist['Playlist Name'] = st.session_state[playlist_name_key]
 
@@ -172,7 +171,8 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
                 st.session_state[exclude_key] = False
             playlist.loc[j, 'Exclude from Excel'] = st.checkbox(
                 f"Exclude track {j + 1} from Playlist {i + 1}",
-                key=exclude_key
+                key=exclude_key,
+                value=st.session_state[exclude_key]
             )
 
         results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc', 'Exclude from Excel'] + (['streams'] if 'streams' in data.columns else [])])
