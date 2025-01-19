@@ -149,8 +149,23 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
 
     results = []
     for i, playlist in enumerate(playlists):
-        playlist['Playlist Name'] = st.text_input(f"Edit Playlist Name for Playlist {i + 1}", value=playlist_names[i])
-        playlist['Exclude from Excel'] = st.checkbox(f"Exclude track from Playlist {i + 1}", key=f"exclude_{i}")
+        playlist_key = f"playlist_{i}"
+        if playlist_key not in st.session_state:
+            st.session_state[playlist_key] = playlist.copy()
+
+        playlist_name_key = f"playlist_name_{i}"
+        exclude_key = f"exclude_{i}"
+
+        if playlist_name_key not in st.session_state:
+            st.session_state[playlist_name_key] = playlist_names[i]
+
+        playlist['Playlist Name'] = st.text_input(f"Edit Playlist Name for Playlist {i + 1}",
+                                                  value=st.session_state[playlist_name_key],
+                                                  key=playlist_name_key)
+
+        playlist['Exclude from Excel'] = st.checkbox(f"Exclude track from Playlist {i + 1}",
+                                                     key=exclude_key)
+
         results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc', 'Exclude from Excel'] + (['streams'] if 'streams' in data.columns else [])])
 
     return "Playlists generated successfully!", results
