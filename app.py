@@ -147,8 +147,9 @@ def process_playlists(file, num_playlists, tracks_per_playlist, language, use_op
 
     results = []
     for i, playlist in enumerate(playlists):
-        playlist['Playlist Name'] = playlist_names[i]
-        results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc'] + (['streams'] if 'streams' in data.columns else [])])
+        playlist['Playlist Name'] = st.text_input(f"Edit Playlist Name for Playlist {i + 1}", value=playlist_names[i])
+        playlist['Exclude from Excel'] = st.checkbox(f"Exclude Playlist {i + 1} from Excel")
+        results.append(playlist[['Playlist Name', 'artist', 'title', 'isrc', 'Exclude from Excel'] + (['streams'] if 'streams' in data.columns else [])])
 
     return "Playlists generated successfully!", results
 
@@ -156,8 +157,9 @@ def save_to_excel(playlists, output_filename):
     """Save playlists to an Excel file with each playlist as a separate sheet."""
     with pd.ExcelWriter(output_filename) as writer:
         for i, playlist in enumerate(playlists):
-            sheet_name = re.sub(r'[\\/*?:\[\]]', '_', playlist['Playlist Name'].iloc[0])[:31]  # Ensure sheet name is valid
-            playlist.to_excel(writer, sheet_name=sheet_name, index=False)
+            if not playlist['Exclude from Excel'].iloc[0]:
+                sheet_name = re.sub(r'[\\/*?:\[\]]', '_', playlist['Playlist Name'].iloc[0])[:31]  # Ensure sheet name is valid
+                playlist.to_excel(writer, sheet_name=sheet_name, index=False)
 
 # Streamlit Interface
 st.title("Playlist Generator")
